@@ -3,38 +3,218 @@ from flask_cors import CORS
 import requests
 import random
 import time
-import re
-import json
-from datetime import datetime
 
 app = Flask(__name__)
 CORS(app)
 
 # ===== RAPPER DATABASE =====
 RAPPERS = [
-    # Modern Rappers
-    "playboicarti", "kencarson", "destroylonely", "theweeknd", "drake", "21savage",
-    "future", "metroboomin", "travisscott", "yeat", "liluzivert", "youngthug",
-    "gunna", "lilbaby", "durrio", "nba youngboy", "rodwave", "summrs", "autumn",
-    "homixidegang", "sofaygo", "don toliver", "lucki", "babyface ray",
-    
-    # With variations
-    "playboi", "carti", "ken", "carson", "destroy", "lonely", "weeknd", "abel",
-    "future", "pluto", "metro", "travis", "scott", "yeat", "luh", "uzi", "thug",
-    "gunna", "wunna", "baby", "durr", "youngboy", "nba", "rod", "wave", "summr",
-    
-    # Old School
-    "2pac", "biggie", "snoop", "dogg", "eminem", "kendrick", "lamar", "jcole",
-    "cole", "kanye", "west", "ye", "jayz", "nas", "wu tang", "methodman",
-    
-    # SoundCloud Era
-    "xxxtentacion", "xxx", "juicewrld", "peep", "lilpeep", "traci", "wifi",
-    "killy", "pressa", "smokepurpp", "lilpump", "6ix9ine", "tekashi",
-    
-    # Underground
-    "slump6s", "kankan", "izaya", "tiji", "jayo", "vonski", "iayze", "jace",
-    "2hard", "che", "winter", "goonie", "k suave", "ssgkobe", "kobe",
+    "playboicarti", "kencarson", "destroylonely", "theweeknd", "drake", 
+    "21savage", "future", "metroboomin", "travisscott", "yeat", 
+    "liluzivert", "youngthug", "gunna", "lilbaby", "durrio", 
+    "youngboy", "rodwave", "summrs", "homixidegang", "sofaygo",
+    "playboi", "carti", "carson", "lonely", "weeknd", "future",
+    "metro", "travis", "scott", "yeat", "uzi", "thug", "gunna",
+    "baby", "durr", "youngboy", "rod", "wave", "summr"
 ]
+
+# ===== REAL INSTAGRAM CHECKER =====
+def check_instagram_real(username):
+    """Actually checks Instagram"""
+    try:
+        # Method 1: Check profile page
+        headers = {
+            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36'
+        }
+        
+        url = f"https://www.instagram.com/{username}/"
+        response = requests.get(url, headers=headers, timeout=10)
+        
+        # If 404, username is available
+        if response.status_code == 404:
+            return True
+            
+        # If 200, check if it's an error page
+        if response.status_code == 200:
+            if 'The link you followed may be broken' in response.text:
+                return True
+            if 'Sorry, this page' in response.text:
+                return True
+            if 'Page Not Found' in response.text:
+                return True
+            return False
+            
+        return False
+    except:
+        return False
+
+# ===== GENERATE RAPPER STYLE USERNAMES =====
+def generate_rapper_style(count=50):
+    usernames = []
+    for _ in range(count * 3):
+        rapper = random.choice(RAPPERS)
+        
+        # Variations
+        variations = [
+            rapper,
+            rapper + str(random.randint(0,9)),
+            rapper + str(random.randint(10,99)),
+            rapper + 'x',
+            'x' + rapper,
+            'lil' + rapper,
+            'young' + rapper,
+            'big' + rapper,
+            'king' + rapper,
+            rapper + 'baby',
+            rapper + 'gang',
+            rapper + 'world',
+        ]
+        
+        # Add doubled letters (fahhhhhhhh style)
+        if len(rapper) > 3:
+            doubled = rapper[0] + rapper[1] + rapper[2] + rapper[3] * 3
+            variations.append(doubled)
+        
+        usernames.extend(variations)
+    
+    # Remove duplicates and shuffle
+    usernames = list(set(usernames))
+    random.shuffle(usernames)
+    return usernames[:count]
+
+# ===== GENERATE LONG AESTHETIC =====
+def generate_long_style(count=50):
+    usernames = []
+    vowels = 'aeiou'
+    cons = 'bcdfghjklmnpqrstvwxyz'
+    rare = 'xzqjwvy'
+    
+    for _ in range(count):
+        # fahhhhhhhhh style
+        length = random.randint(8, 15)
+        if random.random() > 0.5:
+            # fa + hhhhhh
+            username = 'fa' + 'h' * (length-2)
+        else:
+            # ca + rrrrr + son
+            username = random.choice(['ca', 'ba', 'da', 'ka', 'ra', 'sa', 'ta'])
+            username += random.choice(['r', 'h', 'k', 'l', 'm', 'n']) * (length-5)
+            username += random.choice(['son', 'man', 'boy', 'kid'])
+            username = username[:length]
+        
+        usernames.append(username.lower())
+    
+    return usernames
+
+# ===== GENERATE RARE SHORT =====
+def generate_short_style(count=50):
+    usernames = []
+    rare = 'xzqjwvy'
+    vowels = 'aeiou'
+    numbers = '0123456789'
+    
+    for _ in range(count * 3):
+        patterns = [
+            random.choice(rare) + random.choice(vowels) + random.choice(rare),
+            random.choice(rare) + random.choice(rare) + random.choice(vowels),
+            random.choice(rare) + random.choice(numbers) + random.choice(rare),
+            'x' + random.choice(vowels) + 'x',
+            'z' + random.choice(vowels) + 'z',
+            'q' + random.choice(vowels) + 'q',
+            'j' + random.choice(vowels) + 'j',
+            'w' + random.choice(vowels) + 'w',
+            'v' + random.choice(vowels) + 'v',
+            'y' + random.choice(vowels) + 'y',
+        ]
+        
+        username = random.choice(patterns)
+        usernames.append(username.lower())
+    
+    usernames = list(set(usernames))
+    random.shuffle(usernames)
+    return usernames[:count]
+
+# ===== API ENDPOINTS =====
+
+@app.route('/')
+def home():
+    return jsonify({
+        'status': 'online',
+        'message': 'EREN API WORKING',
+        'endpoints': {
+            '/check/username': 'GET - Check Instagram',
+            '/generate/rappers': 'GET - Rapper usernames',
+            '/generate/long': 'GET - Long aesthetic',
+            '/generate/short': 'GET - Rare short',
+            '/generate/mix': 'GET - Mixed styles',
+            '/send-telegram': 'POST - Telegram'
+        }
+    })
+
+@app.route('/check/<username>')
+def check_endpoint(username):
+    """Check if username is available"""
+    is_available = check_instagram_real(username)
+    return jsonify({
+        'available': is_available,
+        'username': username
+    })
+
+@app.route('/generate/rappers')
+def generate_rappers():
+    count = request.args.get('count', default=50, type=int)
+    if count > 500:
+        count = 500
+    usernames = generate_rapper_style(count)
+    return jsonify({'usernames': usernames})
+
+@app.route('/generate/long')
+def generate_long():
+    count = request.args.get('count', default=50, type=int)
+    if count > 500:
+        count = 500
+    usernames = generate_long_style(count)
+    return jsonify({'usernames': usernames})
+
+@app.route('/generate/short')
+def generate_short():
+    count = request.args.get('count', default=50, type=int)
+    if count > 500:
+        count = 500
+    usernames = generate_short_style(count)
+    return jsonify({'usernames': usernames})
+
+@app.route('/generate/mix')
+def generate_mix():
+    count = request.args.get('count', default=50, type=int)
+    if count > 500:
+        count = 500
+    
+    all_usernames = []
+    all_usernames.extend(generate_rapper_style(count//3))
+    all_usernames.extend(generate_long_style(count//3))
+    all_usernames.extend(generate_short_style(count//3))
+    
+    random.shuffle(all_usernames)
+    return jsonify({'usernames': all_usernames[:count]})
+
+@app.route('/send-telegram', methods=['POST'])
+def send_telegram():
+    data = request.json
+    token = data.get('token')
+    chat_id = data.get('chat_id')
+    message = data.get('message')
+    
+    try:
+        url = f"https://api.telegram.org/bot{token}/sendMessage"
+        params = {'chat_id': chat_id, 'text': message}
+        response = requests.get(url, params=params)
+        return jsonify({'success': response.status_code == 200})
+    except:
+        return jsonify({'success': False})
+
+if __name__ == '__main__':
+    app.run(host='0.0.0.0', port=5000)]
 
 # ===== AI USERNAME GENERATOR =====
 class AIUsernameGenerator:
